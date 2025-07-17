@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login / Signup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #1e1e1e;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .login-container {
+      background: #2e2e2e;
+      color: #f1f1f1;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h1.login-title {
+      font-size: 2em;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    select {
+      width: 100%;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      background: #444;
+      color: #fff;
+    }
+
+    input[type="file"] {
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #444;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    #status {
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 0.9em;
+      border-radius: 5px;
+    }
+
+    #status.error {
+      background: rgba(255, 0, 0, 0.1);
+      color: red;
+    }
+
+    #status.success {
+      background: rgba(0, 255, 0, 0.1);
+      color: lightgreen;
+    }
+
+    .toggle {
+      margin-top: 15px;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 0.9em;
+      text-decoration: underline;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h1 class="login-title">🎬 StreamHub</h1>
+
+    <!-- Login Form -->
+    <form id="loginForm">
+      <div class="form-group">
+        <input type="text" id="username" placeholder="Username" required>
+      </div>
+      <div class="form-group">
+        <input type="password" id="password" placeholder="Password" required>
+      </div>
+      <button type="submit">Login</button>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signupForm" class="hidden" enctype="multipart/form-data">
+      <div class="form-group">
+        <input type="text" id="signupUsername" placeholder="Username" required>
+      </div>
+      <div class="form-group">
+        <input type="password" id="signupPassword" placeholder="Password" required>
+      </div>
+      <div class="form-group">
+        <select id="userType" required>
+          <option value="" disabled selected>Select user type</option>
+          <option value="streamer">Streamer</option>
+          <option value="viewer">Viewer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <input type="file" id="signupImage" accept="image/*" required>
+      </div>
+      <button type="submit">Sign Up</button>
+    </form>
+
+    <p class="toggle" onclick="toggleForms()">Switch to Signup</p>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const toggleText = document.querySelector('.toggle');
+    const statusBox = document.getElementById('status');
+
+    function toggleForms() {
+      loginForm.classList.toggle('hidden');
+      signupForm.classList.toggle('hidden');
+      toggleText.textContent = loginForm.classList.contains('hidden')
+        ? 'Switch to Login'
+        : 'Switch to Signup';
+      statusBox.textContent = '';
+      statusBox.className = '';
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("user_id", data.user_id);
+          window.location.href = data.redirect;
+        } else {
+          showStatus(data.message, 'error');
+        }
+      } catch (err) {
+        showStatus("Login error", 'error');
+        console.error(err);
+      }
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('signupUsername').value;
+      const password = document.getElementById('signupPassword').value;
+      const user_type = document.getElementById('userType').value;
+      const imageFile = document.getElementById('signupImage').files[0];
+
+      if (!username || !password || !user_type || !imageFile) {
+        return showStatus("All fields are required.", 'error');
+      }
+
+      try {
+        const formData = new FormData();
+        formData.append('username', username);
+        formData.append('password', password);
+        formData.append('user_type', user_type);
+        formData.append('image', imageFile);
+
+        const res = await fetch('/signup', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.text();
+
+        if (res.ok) {
+          showStatus("Signup successful! You can now log in.", 'success');
+          toggleForms();
+        } else {
+          showStatus(data || 'Signup failed.', 'error');
+        }
+      } catch (err) {
+        showStatus("Signup error", 'error');
+        console.error(err);
+      }
+    });
+
+    function showStatus(message, type) {
+      statusBox.textContent = message;
+      statusBox.className = `status-message ${type}`;
+    }
+  </script>
+</body>
+</html>

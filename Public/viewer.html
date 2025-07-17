@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Live Viewer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:  #1e1e1e;
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.8em;
+      font-weight: 700;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logout-btn {
+      padding: 10px 20px;
+      background: linear-gradient(45deg, #e74c3c, #c0392b);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .main-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    .section-title {
+      font-size: 2em;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 25px;
+      text-align: center;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .streams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .stream-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .stream-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+      border-color: #667eea;
+    }
+
+    .stream-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .stream-card h3 {
+      font-size: 1.2em;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .stream-card p {
+      color: #6c757d;
+      margin-bottom: 15px;
+      font-size: 0.95em;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(231, 76, 60, 0.1);
+      color: #e74c3c;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #e74c3c;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .watch-btn {
+      width: 100%;
+      padding: 12px 20px;
+      background: linear-gradient(45deg, #08eb08);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.9em;
+    }
+
+    .watch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .video-player {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .video-player video {
+      width: 100%;
+      border-radius: 12px;
+      background: #000;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .chat-section {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-title {
+      font-size: 1.4em;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #e0e6ed;
+      border-radius: 12px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      background: white;
+    }
+
+    .send-btn {
+      padding: 12px 20px;
+      background: linear-gradient(45deg, #33ee33);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .chat-box {
+      border: 2px solid #e0e6ed;
+      border-radius: 12px;
+      padding: 20px;
+      height: 300px;
+      overflow-y: auto;
+      background: #f8f9fa;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .chat-message {
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .chat-message strong {
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .status-message {
+      text-align: center;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      margin: 20px 0;
+      font-size: 1.1em;
+      color: #6c757d;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 16px;
+      margin: 20px 0;
+    }
+
+    .empty-state-icon {
+      font-size: 4em;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
+
+    .empty-state h3 {
+      font-size: 1.5em;
+      color: #6c757d;
+      margin-bottom: 10px;
+    }
+
+    .empty-state p {
+      color: #adb5bd;
+      font-size: 1.1em;
+    }
+
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(102, 126, 234, 0.3);
+      border-radius: 50%;
+      border-top-color: #667eea;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .floating-shapes {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .shape {
+      position: absolute;
+      opacity: 0.05;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    .shape:nth-child(1) {
+      top: 10%;
+      left: 10%;
+      width: 100px;
+      height: 100px;
+      background: white;
+      border-radius: 50%;
+      animation-delay: 0s;
+    }
+
+    .shape:nth-child(2) {
+      top: 60%;
+      right: 15%;
+      width: 80px;
+      height: 80px;
+      background: white;
+      border-radius: 50%;
+      animation-delay: 3s;
+    }
+
+    .shape:nth-child(3) {
+      bottom: 20%;
+      left: 20%;
+      width: 120px;
+      height: 120px;
+      background: white;
+      border-radius: 20px;
+      animation-delay: 6s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-30px) rotate(180deg); }
+    }
+
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .main-content {
+        padding: 20px 15px;
+      }
+
+      .streams-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .section-title {
+        font-size: 1.6em;
+      }
+
+      .chat-input-container {
+        flex-direction: column;
+      }
+
+      .chat-box {
+        height: 250px;
+      }
+
+      .video-player {
+        padding: 15px;
+      }
+
+      .chat-section {
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        padding: 15px;
+      }
+
+      .main-content {
+        padding: 15px 10px;
+      }
+
+      .stream-card {
+        padding: 15px;
+      }
+
+      .chat-box {
+        height: 200px;
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
+
+  <div class="header">
+    <div class="header-content">
+      <div class="logo">🎬 StreamHub Viewer</div>
+      <button class="logout-btn" onclick="logout()">👤 Logout</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div style="text-align:center; margin-bottom: 30px;">
+  <input type="text" id="searchInput" placeholder="Search for a stream..."  
+         style="padding: 10px; border-radius: 8px; width: 60%; border: 1px solid #ccc;">
+  <button onclick="searchStream()" 
+          style="padding: 10px 20px; border-radius: 8px; background-color: #333; color: white; border: none; cursor: pointer;">
+    🔍 Search
+  </button>
+  <div id="searchResults" 
+       style="margin-top: 10px; background: #fff; border-radius: 8px; max-height: 200px; overflow-y: auto; width: 60%; margin-left: auto; margin-right: auto; box-shadow: 0 2px 10px rgba(0,0,0,0.2); display: none;">
+  </div>
+</div>
+    <h1 class="section-title">📺 Available Live Streams</h1>
+    
+    <div class="streams-grid" id="buttons"></div>
+    
+    <div id="status" class="status-message">
+      <div class="loading-spinner"></div>
+      Loading streams...
+    </div>
+
+    <div class="video-player" id="videoPlayer" style="display: none;">
+      <div class="streams-grid" id="streams"></div>
+    </div>
+
+    <div class="chat-section">
+      <h2 class="chat-title">💬 Live Chat</h2>
+      
+      <div class="chat-input-container">
+        <input type="text" class="chat-input" id="chat" placeholder="Type your message here..." maxlength="200">
+        <button class="send-btn" onclick="sendChat()">Send 📤</button>
+      </div>
+
+      <div class="chat-box" id="chatBox">
+        <div class="empty-state">
+          <div class="empty-state-icon">💭</div>
+          <h3>No messages yet</h3>
+          <p>Start watching a stream to join the conversation!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const buttonsDiv = document.getElementById('buttons');
+    const streamsDiv = document.getElementById('streams');
+    const status = document.getElementById('status');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const peerConnections = {};
+    let watchingStreamId = null;
+    let userId = null;
+
+    // Initialize user session
+    fetch('/session-user')
+      .then(res => {
+        if (!res.ok) throw new Error('Not logged in');
+        return res.json();
+      })
+      .then(data => {
+        userId = data.user_id;
+        loadStreams();
+      })
+      .catch(() => {
+        alert('Please login first!');
+        window.location.href = '/login.html';
+      });
+
+    function logout() {
+      fetch('/logout', { method: 'POST' })
+        .then(res => {
+          if (res.ok) {
+            window.location.href = '/login.html';
+          } else {
+            alert('Logout failed.');
+          }
+        });
+    }
+
+    function loadStreams() {
+      fetch('/live-streams')
+        .then(res => res.json())
+        .then(streams => {
+          buttonsDiv.innerHTML = '';
+          
+          if (streams.length === 0) {
+            status.innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">📺</div>
+                <h3>No live streams available</h3>
+                <p>Check back later for exciting content!</p>
+              </div>
+            `;
+            return;
+          }
+
+          status.style.display = 'none';
+
+          streams.forEach(stream => {
+            const container = document.createElement('div');
+            container.className = 'stream-card';
+
+            const img = document.createElement('img');
+            img.src = stream.thumbnail;
+            img.alt = 'Stream Thumbnail';
+            img.onerror = () => {
+              img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRjhGOUZBIi8+CjxwYXRoIGQ9Ik04NSA0NUw5NSA1NUw4NSA2NVoiIGZpbGw9IiM2QzQ2QUIiLz4KPC9zdmc+';
+            };
+            container.appendChild(img);
+
+            const title = document.createElement('h3');
+            title.textContent = stream.stream_title;
+            container.appendChild(title);
+
+            const user = document.createElement('p');
+            user.textContent = `By: ${stream.username}`;
+            container.appendChild(user);
+
+            if (stream.is_live === 1) {
+              const liveIndicator = document.createElement('div');
+              liveIndicator.className = 'live-indicator';
+              liveIndicator.innerHTML = '<div class="live-dot"></div><span>🔴 Live</span>';
+              container.appendChild(liveIndicator);
+            }
+
+            const btn = document.createElement('button');
+            btn.className = 'watch-btn';
+            btn.innerHTML = '👀 Watch Stream';
+            btn.onclick = () => startWatching(stream.stream_id);
+            container.appendChild(btn);
+
+            buttonsDiv.appendChild(container);
+          });
+        })
+        .catch(err => {
+          console.error('Error fetching streams:', err);
+          status.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">❌</div>
+              <h3>Failed to load streams</h3>
+              <p>Please refresh the page to try again.</p>
+            </div>
+          `;
+        });
+    }
+
+    function clearVideos() {
+      streamsDiv.innerHTML = '';
+      videoPlayer.style.display = 'none';
+      Object.values(peerConnections).forEach(pc => pc.close());
+      for (const id in peerConnections) delete peerConnections[id];
+    }
+
+    function startWatching(id) {
+      clearVideos();
+      watchingStreamId = id;
+      socket.emit('watcher', id);
+      loadChats(id);
+      videoPlayer.style.display = 'block';
+      videoPlayer.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function loadChats(id) {
+      fetch(`/chats?stream_id=${id}`)
+        .then(res => res.json())
+        .then(messages => {
+          const chatBox = document.getElementById('chatBox');
+          chatBox.innerHTML = '';
+          
+          if (messages.length === 0) {
+            chatBox.innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">💭</div>
+                <h3>No messages yet</h3>
+                <p>Be the first to say something!</p>
+              </div>
+            `;
+            return;
+          }
+
+          messages.forEach(msg => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+            messageDiv.innerHTML = `<strong>${msg.username}:</strong> ${msg.chat}`;
+            chatBox.appendChild(messageDiv);
+          });
+          chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(err => {
+          console.error("Error loading chats:", err);
+          const chatBox = document.getElementById('chatBox');
+          chatBox.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">❌</div>
+              <h3>Failed to load chat</h3>
+              <p>Unable to connect to chat service.</p>
+            </div>
+          `;
+        });
+    }
+
+    function sendChat() {
+      const chatInput = document.getElementById("chat");
+      const message = chatInput.value.trim();
+
+      if (!message || !watchingStreamId || !userId) {
+        alert("Please enter a message, watch a stream, and ensure you're logged in.");
+        return;
+      }
+
+      fetch('/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          stream_id: watchingStreamId,
+          chat: message
+        })
+      })
+      .then(res => res.text())
+      .then(data => {
+        console.log('Chat saved:', data);
+        chatInput.value = '';
+        loadChats(watchingStreamId);
+      })
+      .catch(error => {
+        console.error('Error sending chat:', error);
+        alert('Failed to send message. Please try again.');
+      });
+    }
+
+    // Add enter key support for chat
+    document.getElementById('chat').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendChat();
+      }
+    });
+
+    // WebRTC event handlers
+    socket.on('offer', async (id, description) => {
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      peerConnections[id] = pc;
+
+      pc.ontrack = event => {
+        let video = document.getElementById(`video-${id}`);
+        if (!video) {
+          video = document.createElement('video');
+          video.id = `video-${id}`;
+          video.autoplay = true;
+          video.playsInline = true;
+          video.controls = true;
+          video.style.width = '100%';
+          video.style.borderRadius = '12px';
+          video.style.background = '#000';
+          video.style.boxShadow = '0 5px 20px rgba(0, 0, 0, 0.2)';
+          streamsDiv.appendChild(video);
+        }
+
+        if (!video.srcObject) {
+          video.srcObject = event.streams[0];
+        }
+      };
+
+      pc.onicecandidate = event => {
+        if (event.candidate) {
+          socket.emit('candidate', id, event.candidate);
+        }
+      };
+
+      await pc.setRemoteDescription(description);
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      socket.emit('answer', id, pc.localDescription);
+    });
+
+    socket.on('candidate', (id, candidate) => {
+      const pc = peerConnections[id];
+      if (pc) {
+        pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    });
+
+    socket.on('broadcaster-disconnected', (id) => {
+      if (peerConnections[id]) {
+        peerConnections[id].close();
+        delete peerConnections[id];
+      }
+      const video = document.getElementById(`video-${id}`);
+      if (video) {
+        video.remove();
+        streamsDiv.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📺</div>
+            <h3>Stream ended</h3>
+            <p>The broadcaster has disconnected.</p>
+          </div>
+        `;
+      }
+    });
+
+    window.onbeforeunload = () => {
+      socket.close();
+      Object.values(peerConnections).forEach(pc => pc.close());
+    };
+
+    // Refresh streams every 30 seconds
+    setInterval(loadStreams, 30000);
+
+
+    function searchStream() {
+      const query = document.getElementById('searchInput').value.trim();
+      const resultsDiv = document.getElementById('searchResults');
+
+  if (!query) {
+    resultsDiv.innerHTML = '';
+    resultsDiv.style.display = 'none';
+    return;
+  }
+
+  fetch(`/search-stream?q=${encodeURIComponent(query)}`)
+    .then(res => res.json())
+    .then(results => {
+      if (results.length === 0) {
+        resultsDiv.innerHTML = '<p style="padding: 10px; color: #666;">No streams found</p>';
+      } else {
+        resultsDiv.innerHTML = results.map(stream => `
+          <div onclick="startWatching(${stream.stream_id})" 
+               style="padding: 10px; cursor: pointer; border-bottom: 1px solid #eee;">
+            🎥 <strong>${stream.stream_title}</strong> by <em>${stream.username}</em>
+          </div>
+        `).join('');
+      }
+      resultsDiv.style.display = 'block';
+    })
+    .catch(err => {
+      console.error('Search error:', err);
+      resultsDiv.innerHTML = '<p style="padding: 10px; color: red;">Error searching streams</p>';
+      resultsDiv.style.display = 'block';
+    });
+    
+  
+
+}
+  document.addEventListener('click', function(event) {
+  const searchBox = document.getElementById('searchInput');
+  const dropdown = document.getElementById('searchResults');
+
+  if (searchBox && dropdown && !searchBox.contains(event.target) && !dropdown.contains(event.target)) {
+    dropdown.style.display = 'none';
+  }
+});
+  </script>
+</body>
+</html>

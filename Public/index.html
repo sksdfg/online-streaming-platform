@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Broadcaster</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:  #1e1e1e;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      font-weight: 700;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #34495e;
+      font-size: 1.1em;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 15px 20px;
+      border: 2px solid #e0e6ed;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background: #f8f9fa;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      background: white;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      padding: 15px;
+      border: 2px dashed #e0e6ed;
+      border-radius: 12px;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    input[type="file"]:hover {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    .stream-button {
+      width: 100%;
+      padding: 18px 30px;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 20px;
+    }
+
+    .stream-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .stream-button:active {
+      transform: translateY(0);
+    }
+
+    .video-container {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    video {
+      width: 100%;
+      max-width: 600px;
+      border-radius: 12px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      background: #000;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: rgba(46, 204, 113, 0.1);
+      border: 1px solid #2ecc71;
+      border-radius: 25px;
+      color: #27ae60;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: #e74c3c;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px;
+      border: 2px dashed #e0e6ed;
+      border-radius: 12px;
+      background: #f8f9fa;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #6c757d;
+      font-weight: 500;
+    }
+
+    .file-input-label:hover {
+      border-color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
+      color: #667eea;
+    }
+
+    .upload-icon {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 10px;
+        padding: 20px;
+      }
+      
+      h1 {
+        font-size: 2em;
+      }
+      
+      .stream-button {
+        padding: 15px 25px;
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎥 Start Streaming</h1>
+
+    <div class="form-group">
+      <label for="userId">👤 User ID:</label>
+      <input type="text" id="userId" placeholder="Enter your unique user ID">
+    </div>
+
+    <div class="form-group">
+      <label for="streamTitle">📺 Stream Title:</label>
+      <input type="text" id="streamTitle" placeholder="What's your stream about?">
+    </div>
+
+    <div class="form-group">
+      <label for="thumbnail">🖼️ Thumbnail Image:</label>
+      <div class="file-input-wrapper">
+        <input type="file" id="thumbnail" accept="image/*">
+        <label for="thumbnail" class="file-input-label">
+          <svg class="upload-icon" viewBox="0 0 24 24">
+            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+          </svg>
+          Choose thumbnail image
+        </label>
+      </div>
+    </div>
+
+    <button class="stream-button" onclick="startScreen()">
+      🚀 Start Screen Stream
+    </button>
+
+    <div class="video-container">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <div class="status-indicator" id="statusIndicator" style="display: none;">
+        <div class="live-dot"></div>
+        <span>Live Streaming</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const peerConnections = {};
+    let stream;
+
+    async function startScreen() {
+      const userId = document.getElementById('userId').value.trim();
+      const title = document.getElementById('streamTitle').value.trim();
+      const thumbnailFile = document.getElementById('thumbnail').files[0];
+
+      if (!userId || !title || !thumbnailFile) {
+        alert("Please enter User ID, Stream Title and choose a Thumbnail image.");
+        return;
+      }
+
+      // Upload thumbnail to server
+      const formData = new FormData();
+      formData.append('thumbnail', thumbnailFile);
+
+      const uploadRes = await fetch('/upload-thumbnail', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await uploadRes.json();
+      const thumbnailFilename = result.filename;
+
+      // Get screen stream
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        document.getElementById('localVideo').srcObject = stream;
+        document.getElementById('statusIndicator').style.display = 'inline-flex';
+
+        // Notify server
+        socket.emit('login-user-id', userId);
+        socket.emit('broadcaster');
+        socket.emit('start-stream', { title, thumbnail: thumbnailFilename });
+
+        console.log("📺 Screen stream started and signals sent");
+      } catch (err) {
+        console.error("❌ Failed to start screen stream:", err);
+        alert("Failed to start screen stream.");
+      }
+    }
+
+    socket.on('watcher', id => {
+      console.log("👀 New watcher connected:", id);
+      const peerConnection = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
+
+      peerConnections[id] = peerConnection;
+
+      stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+
+      peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+          socket.emit('candidate', id, event.candidate);
+          console.log("📡 Sent ICE candidate to watcher:", id);
+        }
+      };
+
+      peerConnection.createOffer()
+        .then(offer => peerConnection.setLocalDescription(offer))
+        .then(() => {
+          socket.emit('offer', id, peerConnection.localDescription);
+          console.log("📨 Sent offer to watcher:", id);
+        });
+    });
+
+    socket.on('answer', (id, description) => {
+      const pc = peerConnections[id];
+      if (pc) {
+        pc.setRemoteDescription(description);
+        console.log(" Received answer from watcher:", id);
+      }
+    });
+
+    socket.on('candidate', (id, candidate) => {
+      const pc = peerConnections[id];
+      if (pc) {
+        pc.addIceCandidate(new RTCIceCandidate(candidate));
+        console.log("Added ICE candidate from watcher:", id);
+      }
+    });
+
+    socket.on('broadcaster-disconnected', id => {
+      const pc = peerConnections[id];
+      if (pc) {
+        pc.close();
+        delete peerConnections[id];
+        console.log("👋 Watcher disconnected:", id);
+      }
+    });
+
+    window.onbeforeunload = () => {
+      socket.close();
+    };
+  </script>
+</body>
+</html>
