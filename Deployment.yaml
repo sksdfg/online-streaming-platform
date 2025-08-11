@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: online-streaming-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: online-streaming-platform
+  template:
+    metadata:
+      labels:
+        app: online-streaming-platform
+    spec:
+      containers:
+        - name: online-streaming-platform
+          image: online-streaming-platform:1.0.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_HOST
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_NAME
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_PORT
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: online-streaming-platform-service
+spec:
+  type: NodePort
+  selector:
+    app: online-streaming-platform
+  ports:
+    - port: 80
+      targetPort: 3000
+      nodePort: 30080
