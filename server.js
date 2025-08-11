@@ -23,9 +23,18 @@ app.use(session({
   }
 }));
 
-app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
 
 // DB connection
 const db = mysql.createPool({
@@ -286,7 +295,7 @@ app.get('/search-stream', async (req, res) => {
       SELECT streams.stream_id, streams.stream_title, streams.thumbnail, streams.is_live, users.username
       FROM streams
       JOIN users ON streams.streamer_id = users.user_id
-      WHERE streams.stream_title LIKE ?
+      WHERE streams.stream_title LIKE ? AND streams.is_live = 1
     `, [`${query}%`]);
 
     res.json(results);
