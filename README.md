@@ -97,7 +97,7 @@ MySQL
 
 Clone the repository
 
-git clone https://github.com/your-username/online-streaming-platform.git
+git clone https://github.com/sksdfg/online-streaming-platform.git
 cd online-streaming-platform
 
 
